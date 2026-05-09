@@ -4,76 +4,172 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-`GotMessy` is **not a code project** — there is no source tree, build system, or test suite. The repository currently contains:
+This is a repo in the **hubbabubba-ai** GitHub organisation for the **Got Messy** brand — an AI-powered prompt-engineering app for non-technical creators ("real people with real chaos"). The repository currently holds brand/design assets and product planning documentation. No shipping application code has landed yet.
 
-- `README.md` — a single-line placeholder (`# GotMessy`).
-- `Final.zip` — a bundle of brand assets and standalone HTML/PDF deliverables for the **Got Messy** brand (an AI tool for "real people with real chaos" — messy notes, half-finished ideas, drafts that need to sound professional).
-- `.github/workflows/blank.yml` — a **placeholder** GitHub Actions workflow that only runs `echo Hello, world!` on push/PR to `main`. It is not a real build or test; do not treat a green check here as validation of anything. Replace it (don't extend it) when actual CI is needed.
-- `.claude/settings.json` — enables the `superpowers@claude-plugins-official` plugin for this repo.
+**Current contents:**
 
-Treat this repo as a brand/design package until code is added. Do not invent build, lint, or test commands; none exist.
+| Path | Description |
+|---|---|
+| `README.md` | Single-line placeholder (`# GotMessy`) |
+| `Final.zip` | Brand-asset bundle (~1.9 MB, 44 files) |
+| `Final/` | Extracted bundle — tracked on `claude/brand-guidelines-system-design`, not yet on the default branch |
+| `docs/brand-guidelines.md` | Operational brand rules (on `claude/brand-guidelines-system-design`) |
+| `docs/system-design.md` | Full system architecture document (on `claude/brand-guidelines-system-design`) |
+| `.github/workflows/blank.yml` | **Placeholder CI** — runs `echo Hello, world!` only; a green check here validates nothing |
+| `.github/workflows/static.yml` | **Real deployment** — publishes the entire repo to GitHub Pages on every push to the default branch |
+| `.claude/settings.json` | Enables the `superpowers@claude-plugins-official` plugin |
 
-## Inspecting the assets
+Treat this repo as a brand/design package until application code is added. **Do not invent build, lint, or test commands** — none exist.
 
-Everything lives inside `Final.zip`. To work with it:
+## Related repositories
+
+The `hubbabubba-ai` org contains several repos within Claude's MCP scope:
+
+| Repo | Notes |
+|---|---|
+| `gotmessy` | Canonical repo; has the full brand commit history |
+| `messy` | Mirror of the same brand assets |
+| `zoe` | Mirror of the same brand assets |
+| `your-promptness` | Empty — no content yet |
+
+When MCP scope permits access to multiple repos, apply consistent CLAUDE.md updates across all of them.
+
+## Product overview
+
+Read `docs/system-design.md` (on `claude/brand-guidelines-system-design`) for the full engineering spec. Summary:
+
+**Got Messy** is a **mobile-first prompt-engineering app** for non-technical creators. It accepts messy raw input (text, PDFs, URLs) and produces validated, reusable prompt templates the user can run on the LLM of their choice.
+
+### Product surfaces (Hub & Spoke)
+
+| ID | Surface | Role |
+|---|---|---|
+| 1.0 | Home Dashboard *(Hub)* | Index, recent activity, quick start |
+| 2.0 | The Architect *(MVP core)* | Four-phase prompt builder |
+| 3.0 | The Vault | My Good Stuff, Community Recipes, Favourites |
+| 4.0 | Settings | Model toggle, User DNA, billing / BYOK |
+
+**The Architect's four phases**: The Drop (paste raw input) → Intent Classifier (NLP: detect persona/task/format signals) → Triple-Pillar editor (Persona / Task / Format fields) → Test Flight (run assembled prompt against chosen LLM).
+
+### Planned tech stack
+
+| Layer | Tech |
+|---|---|
+| Client | React Native (Expo) + React Native Web; Next.js for `gotmessy.com` marketing |
+| API Gateway / BFF | Hono on Cloudflare Workers (or Next.js API routes) |
+| Database | Postgres (Neon or Supabase) + pgvector for embeddings |
+| Identity | Clerk or Auth0 (external IdP) |
+| LLM providers | Gemini, OpenAI, Anthropic — user-selectable + BYOK |
+| Object storage | S3 / Cloudflare R2 |
+| Observability | OpenTelemetry + Sentry |
+
+**LLM Gateway**: a single internal service all callers use to reach providers — one place for PII redaction before egress, token counting, per-user quotas, response caching (deterministic prompts), and provider failover.
+
+### Build phases
+
+| Phase | Scope |
+|---|---|
+| 0 — Foundations | Repo scaffolding, IdP integration, shared design tokens package, CI on PRs |
+| 1 — Architect MVP | Smart Paste (text only), Triple-Pillar editor, single-provider Test Flight, basic Vault save |
+| 2 — Multi-LLM | LLM Gateway (all 3 providers), model toggle in Settings, BYOK |
+| 3 — Smart Paste full | PDF + URL inputs, PII Sanity Check (Strict/Standard), production Intent Classifier |
+| 4 — Vault expansion | Community Recipes, tags, semantic search via pgvector embeddings |
+| 5 — User DNA | Onboarding capture, persistence, auto-injection at Test Flight time |
+| 6 — Risk scoring | Hallucination Risk Score, citation extraction |
+
+See `docs/system-design.md §9` for phase exit criteria. Each phase ships behind a feature flag.
+
+## Inspecting the brand assets
+
+Everything lives inside `Final.zip`:
 
 ```bash
 unzip -l Final.zip                       # list contents (44 files under Final/)
 unzip -o Final.zip -d /tmp/gotmessy      # extract for inspection / editing
 ```
 
-After editing, repackage with `zip -r Final.zip Final/` from the directory containing the `Final/` folder. Do not commit the extracted directory alongside the zip — pick one source of truth and stick with it.
+After editing, repackage with `zip -r Final.zip Final/` from the directory containing the `Final/` folder. Do not commit the extracted directory alongside the zip — pick one source of truth. The `claude/brand-guidelines-system-design` branch tracks `Final/` directly; if that pattern merges, drop the zip from future commits.
 
-## Bundle contents (`Final/`)
+### Bundle contents (`Final/`)
 
-Three categories, all flat in one directory:
+1. **Logos & icons** — `gotmessy-logo-{A,B,C}` (SVG + PNG + `@2x`; transparent variants for A; Logo A is the lead), `gotmessy-icon.svg`, `gotmessy-app-icon.png` (+ `@2x`)
+2. **Reference sheets** — `gotmessy-color-sheet.png`, `gotmessy-type-sheet.png`
+3. **Standalone HTML/PDF deliverables**:
+   - `gotmessy-hub` — *Project Hub v2.0* (daily dashboard / asset index)
+   - `gotmessy-brand-kit` — *Brand Identity Kit* (logos, colours, type, voice, domains)
+   - `prompt-architect-infographic` — *App Architecture* infographic (product-view counterpart to `docs/system-design.md`)
 
-1. **Logos & icons** — `gotmessy-logo-{A,B,C}` (SVG + PNG + `@2x` PNG, plus transparent variants for A), `gotmessy-icon.svg`, `gotmessy-app-icon.png` (+ `@2x`). Logo `A` is the lead.
-2. **Reference sheets** — `gotmessy-color-sheet.png`, `gotmessy-type-sheet.png`.
-3. **Standalone HTML/PDF deliverables** (each has both an `.html` and a `.pdf`):
-   - `gotmessy-hub` — *Got Messy · Project Hub v2.0*. Daily dashboard / index of all assets.
-   - `gotmessy-brand-kit` — *Brand Identity Kit*. Canonical reference for name rationale, logos, colors, type, voice, domains, tooling.
-   - `prompt-architect-infographic` — *App Architecture* infographic.
+The `claude/brand-guidelines-system-design` branch additionally tracks `Final/gotmessy-brand-guidelines.html` and `Final/gotmessy-system-design.html`.
 
 ### `-final` naming convention
 
-Most assets exist twice: a base name and a `-final` (or `-final.<ext>`) variant — e.g. `gotmessy-logo-A.png` and `gotmessy-logo-A-final.png`. The `-final` files are the **canonical, shippable** versions; the un-suffixed files are working copies. The HTML deliverables are byte-identical between the two variants today, but treat `-final` as the source of truth when they diverge. When adding new assets, mirror this pairing.
+Most assets exist twice: a working copy (no suffix) and a canonical `-final` variant — e.g. `gotmessy-logo-A.png` and `gotmessy-logo-A-final.png`. **The `-final` files are the shippable source of truth.** When they diverge, follow `-final`. Mirror this pairing when adding new assets.
 
-## Brand tokens (use these verbatim if generating UI/HTML)
+## Brand tokens
 
-Pulled from the inline CSS `:root` block in the HTML deliverables — keep these in sync if you edit any of the HTML files.
+Use these verbatim when generating UI or HTML. Source of truth: the `:root` CSS block in any HTML deliverable. Keep in sync when editing those files.
 
-**Colors**
+**Colours**
 
 | Token | Hex | Role |
 |---|---|---|
-| `--cream` | `#FAF7F2` | primary text on dark |
-| `--warm` | `#F2EDE4` | warm neutral |
-| `--ink` | `#1A1612` | page background (dark) |
-| `--ink-soft` | `#3D3530` | secondary background |
-| `--dust` | `#C4B5A0` | muted text / labels |
-| `--clay` / `--clay-dk` / `--clay-lt` | `#C4673A` / `#9B4A28` / `#E8896A` | accent (the dot, links, primary buttons) |
-| `--sage` | `#5C7A62` | success / live status |
-| `--lav` | `#8B7BAB` | secondary accent |
-| `--sky` | `#5B8FA8` | secondary accent |
-| `--yellow` | `#E8C84A` | highlight |
-| `--card` / `--card-bd` | `#1E1A16` / `rgba(255,255,255,0.08)` | card surface + border |
+| `--cream` | `#FAF7F2` | Primary text on dark |
+| `--warm` | `#F2EDE4` | Warm neutral / light-mode page background |
+| `--ink` | `#1A1612` | Default page background (dark) |
+| `--ink-soft` | `#3D3530` | Secondary background |
+| `--dust` | `#C4B5A0` | Muted text / labels / metadata |
+| `--clay` | `#C4673A` | Primary accent — links, buttons, terminal dot |
+| `--clay-dk` | `#9B4A28` | Clay hover / pressed state |
+| `--clay-lt` | `#E8896A` | Clay focus ring / large hero accents |
+| `--sage` | `#5C7A62` | Success / live status |
+| `--lav` | `#8B7BAB` | Secondary accent (categorisation) |
+| `--sky` | `#5B8FA8` | Secondary accent (categorisation) |
+| `--yellow` | `#E8C84A` | Highlight — use sparingly |
+| `--card` | `#1E1A16` | Card surface |
+| `--card-bd` | `rgba(255,255,255,0.08)` | Card border |
 
-**Typography** — Google Fonts: `Lora` (serif, used italic for "Got" and bold for headings/wordmarks) and `Poppins` (sans, body & UI). Wordmark pattern: `Got` in *italic Lora 400*, `Messy` in **bold Lora 700**, terminal `.` in `--clay`.
+Accent budget: at most **three** of `--clay`, `--sage`, `--lav`, `--sky`, `--yellow` per screen.
 
-**Voice** — "brilliant friend who happens to be great with words. Not a tutor. Not a robot. Not a hustle-culture coach." Avoid tech jargon and learning-curve language.
+**Forbidden**: pure white (`#FFF`) backgrounds, pure black (`#000`), electric blues/teals, high-saturation neons. Never recolour the terminal dot.
 
-**Domains** — `gotmessy.com` is the lead brand. `cloudcomb.com` is held for an enterprise/team edition (deliberately opposite tone — orderly, systematic).
+**Typography** — Google Fonts: `Lora` (serif) and `Poppins` (sans).
 
-**Avoid** — pure white backgrounds, electric blues/teals, high-saturation neons.
+Wordmark: `got` in *Lora 400 italic* + `Messy` in **Lora 700** + terminal `.` in `--clay`. Never rebuild in Poppins or all-caps. Never recolour, rotate, skew, or animate the wordmark components independently.
+
+Type scale (rem, 16px root): Display `clamp(3rem,7vw,5.5rem)` Lora 700 → H1 `2.25rem` → H2 `1.5rem` → H3 `1.15rem` → Body `0.875–1rem` Poppins → Caption `0.75rem`.
+
+**Voice** — "A brilliant friend who happens to be great with words. Not a tutor. Not a robot. Not a hustle-culture coach."
+
+Never use: *journey*, *unlock*, *unleash*, *supercharge*, *empower* (as filler), *AI-powered*, *cutting-edge*, *leverage* (verb), *learning curve*. One exclamation mark per page maximum, and only on genuine user wins.
+
+**Domains** — `gotmessy.com` is the only consumer-facing domain. `cloudcomb.com` is held for the enterprise/team edition (deliberately different tone — do not cross-pollinate).
+
+## GitHub Pages deployment
+
+`static.yml` deploys the **entire repository** to GitHub Pages on every push to the default branch. This means:
+
+- Every tracked file becomes publicly accessible at the Pages URL after merge to the default branch.
+- Do not commit secrets, private drafts, or unlicensed assets — they will be public.
+- HTML files in `Final/` (if the extracted directory ever merges) will be directly browseable.
+- A green `static.yml` check = site is live. A green `blank.yml` check = nothing (placeholder only — ignore it).
+- When a dedicated `site/` or `docs/` build step exists, scope `static.yml` to that output directory rather than deploying the whole repo root.
 
 ## Workflow conventions
 
-- **Branch**: develop on whatever `claude/...` branch the task explicitly assigns (e.g. past sessions used `claude/add-claude-documentation-gXwtx`, `claude/install-superpowers-plugin-t4hXQ`). Never push to `main` or to a different session's branch without explicit permission.
-- **Commits**: the early history has terse messages (`Initial commit`, `Add files via upload`); more recent merged work uses descriptive ones (`Add CLAUDE.md with brand-asset repo overview`, `Add basic CI workflow configuration`, `Enable superpowers plugin from claude-plugins-official`). Match the descriptive style — explain the *why*, not just the *what*.
-- **PRs**: changes land on `main` via PRs from `claude/...` branches (see merged PRs #1, #2). Open new work as a draft PR after the first push.
-- **GitHub scope**: MCP tools are restricted to `hubbabubba-ai/gotmessy`.
+- **Branch**: develop on the `claude/...` branch explicitly assigned to this task. Never push directly to the default branch or to another session's branch without explicit permission.
+- **Commits**: write descriptive messages that explain the *why*. Match the style of recent merged history ("Add CLAUDE.md with brand-asset repo overview", "Add GitHub Pages deployment workflow"). Terse messages like "Update file" are no longer acceptable for design changes.
+- **PRs**: open new work as a **draft PR** after the first push. All changes land on the default branch via PR — never direct push.
+- **Asset changes**: when adding or updating a brand asset, capture *why* in the commit message. Re-run contrast/legibility checks if a colour token changed.
+- **Paired docs**: `docs/brand-guidelines.md` and `Final/gotmessy-brand-guidelines.html` are paired — update both together. Same for `docs/system-design.md` and `Final/gotmessy-system-design.html`. If anything contradicts the Brand Identity Kit (`gotmessy-brand-kit-final.html`), the Kit wins — update both.
+- **GitHub scope**: MCP tools in this session are restricted to the `hubbabubba-ai` repos listed in "Related repositories" above.
 
-## When code does land here
+## When application code lands
 
-There is no precedent for build/test tooling yet. If you add code, also extend this file with the actual commands (build, lint, test, run-single-test) and a short architecture overview — don't leave future instances guessing.
+No build or test tooling exists yet. When code is added:
+
+1. Update this file with actual commands: build, test, lint, run-dev, run-single-test.
+2. Add a short architecture overview for what has actually been built (distinct from the planned architecture above).
+3. Replace `blank.yml` with real CI — do not extend the placeholder.
+4. Scope `static.yml` to a build output directory rather than the whole repo root.
+5. If a `packages/tokens/` shared package is added (per system design), document how to regenerate tokens from the brand kit's CSS `:root` block.
+6. Document the IdP choice (Clerk vs Auth0) and any env vars required once the decision is made.
